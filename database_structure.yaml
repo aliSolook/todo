@@ -1,0 +1,20 @@
+task:
+  - title: string
+  - description: string?
+  - duration: duration?
+  - starting_date: date
+  - starting_time: timeOfDay
+  - category: category
+  - image: string?
+  - status: bool
+
+category:
+  - name: string
+  - image: string
+  - color: int
+
+counters:
+  - title: string
+  - description: string?
+  - duration: duration
+  - image: string

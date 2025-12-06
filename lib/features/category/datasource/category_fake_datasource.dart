@@ -1,0 +1,132 @@
+import 'dart:math';
+import 'package:dart_either/dart_either.dart';
+import 'package:flutter/foundation.dart' show SynchronousFuture;
+import 'package:flutter/material.dart';
+import 'package:todo/di/di.dart';
+import 'package:todo/features/category/category.dart';
+import 'package:todo/features/image/image.dart';
+import 'package:todo/utils/image_base_color_finder.dart';
+
+class CategoryFakeDatasource implements CategoryDatasource {
+  CategoryFakeDatasource._(this._random);
+
+  late final List<CategoryWrapper> _data;
+  final Random _random;
+
+  static Future<CategoryFakeDatasource> init([int? count, int? seed]) async {
+    final output = CategoryFakeDatasource._(Random(seed));
+    await output._init(count);
+    return output;
+  }
+
+  Future<void> _init(int? count) async {
+    if (count == 0) {
+      _data = [];
+      return;
+    }
+
+    ImageRepository? imgRepo = locator.maybeGet();
+    while (imgRepo == null) {
+      await Future.delayed(Duration.zero);
+      imgRepo = locator.maybeGet();
+    }
+
+    final images = await () async {
+      List<ImageWrapper>? images;
+
+      while (images == null) {
+        await Future.delayed(Duration.zero);
+        images = (await imgRepo!.listImages())
+            .map<List<ImageWrapper>?>((value) => value)
+            .getOrThrow();
+      }
+
+      return images;
+    }();
+
+    int randomColor() =>
+        Colors.primaries[_random.nextInt(Colors.primaries.length)].toARGB32();
+
+    final texts =
+        'لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان گرافیک است، چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است، و برای شرایط فعلی تکنولوژی مورد نیاز، و کاربردهای متنوع با هدف بهبود ابزارهای کاربردی می باشد، کتابهای زیادی در شصت و سه درصد گذشته حال و آینده، شناخت فراوان جامعه و متخصصان را می طلبد، تا با نرم افزارها شناخت بیشتری را برای طراحان رایانه ای علی الخصوص طراحان خلاقی، و فرهنگ پیشرو در زبان فارسی ایجاد کرد، در این صورت می توان امید داشت که تمام و دشواری موجود در ارائه راهکارها، و شرایط سخت تایپ به پایان رسد و زمان مورد نیاز شامل حروفچینی دستاوردهای اصلی، و جوابگوی سوالات پیوسته اهل دنیای موجود طراحی اساسا مورد استفاده قرار گیرد.'
+            .split(' ');
+
+    _data = await Future.wait(
+      Iterable.generate(
+        count ?? _random.nextInt(7) + 3,
+        (i) async {
+          final image = images.isEmpty
+              ? null
+              : images[_random.nextInt(images.length)].id;
+
+          return CategoryWrapper(
+            id: i,
+            title: texts[_random.nextInt(texts.length)],
+            image: image,
+            color: image == null
+                ? randomColor()
+                : await ImageBaseColorFinder(imgRepo!).getColor(image),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Future addCategory(Category category) async {
+    int max = 0;
+    for (var task in _data) {
+      if (task.id as int > max) max = task.id;
+    }
+
+    _data.add(CategoryWrapper.fromCategory(++max, category));
+    return SynchronousFuture(max);
+  }
+
+  @override
+  Future<void> deleteCategory(dynamic id) async {
+    bool idExists = false;
+
+    for (var i = 0; i < _data.length; i++) {
+      if (_data[i].id == id) {
+        _data.removeAt(i);
+        idExists = true;
+        break;
+      }
+    }
+
+    if (!idExists) {
+      throw CategoryNotFoundException(id);
+    }
+  }
+
+  @override
+  Future<CategoryWrapper> getCategory(dynamic id) async {
+    final category = _data.cast<CategoryWrapper?>().firstWhere(
+      (category) => category?.id == id,
+      orElse: () => null,
+    );
+
+    if (category == null) {
+      throw CategoryNotFoundException(id);
+    }
+
+    return category;
+  }
+
+  @override
+  Future<List<CategoryWrapper>> listCategories() async {
+    return List.from(_data);
+  }
+
+  @override
+  Future<void> updateCategory(CategoryWrapper categoryWrapper) async {
+    final index = _data.indexWhere(
+      (category) => category.id == categoryWrapper,
+    );
+    if (index == -1) {
+      throw CategoryNotFoundException(categoryWrapper);
+    }
+    _data[index] = categoryWrapper;
+  }
+}
