@@ -38,14 +38,18 @@ final class CategoryAddScreenState extends Equatable {
 
   CategoryAddScreenState.fromCategory(
     CategoryWrapper category, {
+    Either<Null, dynamic> id = const Left(null),
+    String? title,
+    Either<Null, dynamic> image = const Left(null),
+    int? color,
     this.titleError = '',
     this.customColorsState = const SubState.init(),
     this.submitState = const SubState.init(),
     this.customColorDeleteState = const [],
-  }) : id = category.id,
-       title = category.title,
-       image = category.image,
-       color = category.color;
+  }) : id = id.getOrElse(() => category.id),
+       title = title ?? category.title,
+       image = image.getOrElse(() => category.image),
+       color = color ?? category.color;
 
   CategoryAddScreenState copyWith({
     Either<Null, dynamic> id = const Left(null),

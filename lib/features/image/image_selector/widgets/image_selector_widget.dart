@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'dart:math';
 import 'package:animated_to/animated_to.dart';
@@ -44,11 +43,7 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget>
   late final AnimationController _errorAnimationController;
   late final AnimationController _mainAnimationController;
   late String _errorText = widget.errorText ?? '';
-  MaterialInkController? _inkController;
-  final _splashBoxKey = GlobalKey();
-  final List<Completer<bool>> _splashCompleters = [];
-  final FocusNode _buttonFocusNode = FocusNode();
-  final ValueNotifier<bool> _isHovered = ValueNotifier(false);
+  final _buttonFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -85,18 +80,27 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget>
 
   @override
   void dispose() {
-    super.dispose();
     _mainAnimationController.dispose();
     _errorAnimationController.dispose();
+
+    _buttonFocusNode.dispose();
+
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    final child = Stack(
       children: [
         _getButton(),
         _getCloseIcon(),
       ],
+    );
+
+    if (widget.aspectRatio == null) return child;
+    return AspectRatio(
+      aspectRatio: widget.aspectRatio!,
+      child: child,
     );
   }
 
@@ -114,6 +118,7 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget>
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 child: IconButton(
+                  key: const Key('image_selector_widget_deselect_button'),
                   onPressed: () {
                     if (widget.image == null) return;
                     widget.onSelectionChanged(null);
@@ -149,136 +154,89 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget>
   AnimatedBuilder _getButton() {
     return AnimatedBuilder(
       animation: _errorAnimationController,
-      builder: (context, child) => FocusableActionDetector(
-        focusNode: _buttonFocusNode,
-        onShowHoverHighlight: (value) => _isHovered.value = value,
-        child: GestureDetector(
-          onTap: _onClick,
-          onTapDown: (details) async {
-            if (_inkController == null ||
-                _splashBoxKey.currentContext == null) {
-              return;
-            }
-
-            final splash = Theme.of(context).splashFactory.create(
-              controller: _inkController!,
-              referenceBox:
-                  _splashBoxKey.currentContext!.findRenderObject() as RenderBox,
-              position: details.localPosition,
-              color: Theme.of(context).splashColor,
-              textDirection: Directionality.of(context),
-            );
-
-            _splashCompleters.add(Completer<bool>());
-
-            final canceled = await _splashCompleters.last.future;
-
-            if (canceled) {
-              splash.cancel();
-            } else {
-              splash.confirm();
-            }
-          },
-          onTapUp: (details) {
-            for (var completer in _splashCompleters) {
-              if (!completer.isCompleted) completer.complete(false);
-            }
-          },
-          onTapCancel: () {
-            for (var completer in _splashCompleters) {
-              if (!completer.isCompleted) completer.complete(true);
-            }
-          },
-          child: ListenableBuilder(
-            listenable: Listenable.merge([_buttonFocusNode, _isHovered]),
-            builder: (context, child) => InputDecorator(
-              isFocused: _buttonFocusNode.hasFocus || widget.image != null,
-              isHovering: _isHovered.value,
-              decoration: InputDecoration(
-                visualDensity: VisualDensity.standard,
-                label: widget.label == null
-                    ? null
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(widget.label!),
+      builder: (context, child) => ListenableBuilder(
+        listenable: _buttonFocusNode,
+        builder: (context, child) => InputDecorator(
+          isFocused: _buttonFocusNode.hasFocus || widget.image != null,
+          decoration: InputDecoration(
+            visualDensity: VisualDensity.standard,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+            label: widget.label == null
+                ? null
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(widget.label!),
+                  ),
+            error: _errorAnimationController.value == 0
+                ? null
+                : Align(
+                    heightFactor: _errorAnimationController.value,
+                    widthFactor: 1,
+                    child: Opacity(
+                      opacity: _errorAnimationController.value,
+                      child: Text(
+                        _errorText,
+                        style: Theme.of(
+                          context,
+                        ).inputDecorationTheme.errorStyle,
                       ),
-                error: _errorAnimationController.value == 0
-                    ? null
-                    : Align(
-                        heightFactor: _errorAnimationController.value,
-                        widthFactor: 1,
-                        child: Opacity(
-                          opacity: _errorAnimationController.value,
-                          child: Text(
-                            _errorText,
-                            style: Theme.of(
-                              context,
-                            ).inputDecorationTheme.errorStyle,
-                          ),
-                        ),
-                      ),
-              ),
-              child: child,
-            ),
-            child: child!,
+                    ),
+                  ),
           ),
+          child: child,
         ),
+        child: child,
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadiusGeometry.all(Radius.circular(10)),
-        child: Material(
-          color: Colors.transparent,
-          key: _splashBoxKey,
-          child: Builder(
-            builder: (context) {
-              _inkController = Material.of(context);
-              Widget child = AnimatedSwitcher(
-                duration: widget.duration,
-                child: widget.image == null
-                    ? SizedBox.expand(
-                        key: const ValueKey(
-                          'assets/icons/add_photo_icon.svg',
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(50.0),
-                          child: SvgPicture.asset(
-                            'assets/icons/add_photo_icon.svg',
-                            colorFilter: ColorFilter.mode(
-                              ColorScheme.of(context).onSurfaceVariant,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
-                      )
-                    : SizedBox.expand(
-                        key: ValueKey(widget.image),
-                        child: Image(
-                          image: CustomImageProvider(
-                            imageId: widget.image,
-                            repository: RepositoryProvider.of(context),
-                          ),
-                          errorBuilder: (context, error, stackTrace) => Text(
-                            'خطا در دریافت فایل',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: ColorScheme.of(context).error,
-                              letterSpacing: -0.24,
-                            ),
-                          ),
-                        ),
-                      ),
-              );
-
-              if (widget.aspectRatio != null) {
-                child = AspectRatio(
-                  aspectRatio: widget.aspectRatio!,
-                  child: child,
-                );
-              }
-              return child;
-            },
+      child: FilledButton(
+        onPressed: _onClick,
+        style: FilledButton.styleFrom(
+          // backgroundColor: CustomColors.green,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(10),
+            ),
           ),
+          backgroundColor: Colors.transparent,
+          padding: EdgeInsets.zero,
+          elevation: 0,
+        ),
+        child: AnimatedSwitcher(
+          duration: widget.duration,
+          child: widget.image == null
+              ? SizedBox.expand(
+                  key: const ValueKey(
+                    'assets/icons/add_photo_icon.svg',
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(50.0),
+                    child: SvgPicture.asset(
+                      'assets/icons/add_photo_icon.svg',
+                      colorFilter: ColorFilter.mode(
+                        ColorScheme.of(context).onSurfaceVariant,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                )
+              : SizedBox.expand(
+                  key: ValueKey(widget.image),
+                  child: Image(
+                    image: CustomImageProvider(
+                      imageId: widget.image,
+                      repository: RepositoryProvider.of(context),
+                    ),
+                    errorBuilder: (context, error, stackTrace) => Text(
+                      'خطا در دریافت فایل',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: ColorScheme.of(context).error,
+                        letterSpacing: -0.24,
+                      ),
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -295,7 +253,7 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget>
         create: (context) => locator.get(),
         child: BlocProvider(
           create: (_) => ImageSelectorBloc(),
-          child: const _ModalBottomSheet(),
+          child: const ImageSelectorModalSheet(),
         ),
       ),
     );
@@ -306,14 +264,15 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget>
   }
 }
 
-class _ModalBottomSheet extends StatefulWidget {
-  const _ModalBottomSheet();
+class ImageSelectorModalSheet extends StatefulWidget {
+  const ImageSelectorModalSheet({super.key});
 
   @override
-  State<_ModalBottomSheet> createState() => _ModalBottomSheetState();
+  State<ImageSelectorModalSheet> createState() =>
+      _ImageSelectorModalSheetState();
 }
 
-class _ModalBottomSheetState extends State<_ModalBottomSheet>
+class _ImageSelectorModalSheetState extends State<ImageSelectorModalSheet>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   final _searchBarFocusNode = FocusNode();

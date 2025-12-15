@@ -45,8 +45,8 @@ final class CategoryAddScreenSubmitted extends CategoryAddScreenEvent {
   const CategoryAddScreenSubmitted();
 }
 
-final class CategoryAddScreenReset extends CategoryAddScreenEvent {
-  const CategoryAddScreenReset();
+final class CategoryAddScreenResetRequested extends CategoryAddScreenEvent {
+  const CategoryAddScreenResetRequested();
 }
 
 final class CategoryAddScreenCustomColorsLoadRequested

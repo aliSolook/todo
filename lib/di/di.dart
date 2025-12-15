@@ -13,19 +13,19 @@ Future<void> getItInit({
   int? count,
   int? seed,
 }) async {
-  await _initImage(mock, delay, count, seed);
-  await _initCategory(mock, delay, count, seed);
-  await _initTask(mock, delay, count, seed);
-  await _initCounter(mock, delay, count, seed);
-  await _initCustomColor(mock, delay, count, seed);
+  await initImage(mock: mock, delay: delay, count: count, seed: seed);
+  await initCategory(mock: mock, delay: delay, count: count, seed: seed);
+  await initTask(mock: mock, delay: delay, count: count, seed: seed);
+  await initCounter(mock: mock, delay: delay, count: count, seed: seed);
+  await initCustomColor(mock: mock, delay: delay, count: count, seed: seed);
 }
 
-Future<void> _initImage(
-  bool mock,
+Future<void> initImage({
+  bool mock = false,
   Duration? delay,
   int? count,
   int? seed,
-) async {
+}) async {
   if (mock) {
     _rs<ImageDatasource>(await ImageFakeDatasource.init(seed));
   } else if (kIsWeb) {
@@ -37,12 +37,12 @@ Future<void> _initImage(
   _rs<ImageRepository>(ImageRepositoryImpl(delay));
 }
 
-Future<void> _initCategory(
-  bool mock,
+Future<void> initCategory({
+  bool mock = false,
   Duration? delay,
   int? count,
   int? seed,
-) async {
+}) async {
   if (mock) {
     _rs<CategoryDatasource>(await CategoryFakeDatasource.init(count, seed));
   } else {
@@ -52,12 +52,12 @@ Future<void> _initCategory(
   _rs<CategoryRepository>(CategoryRepositoryImpl(delay));
 }
 
-Future<void> _initTask(
-  bool mock,
+Future<void> initTask({
+  bool mock = false,
   Duration? delay,
   int? count,
   int? seed,
-) async {
+}) async {
   if (mock) {
     _rs<TaskDatasource>(await TaskFakeDatasource.init(count, seed));
   } else {
@@ -67,12 +67,12 @@ Future<void> _initTask(
   _rs<TaskRepository>(TaskRepositoryImpl(delay));
 }
 
-Future<void> _initCounter(
-  bool mock,
+Future<void> initCounter({
+  bool mock = false,
   Duration? delay,
   int? count,
   int? seed,
-) async {
+}) async {
   if (mock) {
     _rs<CounterDatasource>(CounterFakeDatasource());
   } else {
@@ -82,14 +82,16 @@ Future<void> _initCounter(
   _rs<CounterRepository>(CounterRepositoryImpl(delay));
 }
 
-Future<void> _initCustomColor(
-  bool mock,
+Future<void> initCustomColor({
+  bool mock = false,
   Duration? delay,
   int? count,
   int? seed,
-) async {
+}) async {
   if (mock) {
-    _rs<CustomColorDatasource>(await CustomColorFakeDatasource.init(count, seed));
+    _rs<CustomColorDatasource>(
+      await CustomColorFakeDatasource.init(count, seed),
+    );
   } else {
     _rs<CustomColorDatasource>(CustomColorLocalDatasource());
   }

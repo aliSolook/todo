@@ -40,7 +40,7 @@ import 'package:theme_switcher/theme_switcher.dart';
 import 'package:todo/app.dart';
 import 'package:todo/di/di.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
-import 'package:todo/init_hive.dart';
+import 'package:todo/hive_init.dart';
 
 import 'features/screen_manager/screen_manager.dart';
 
@@ -49,7 +49,7 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  initHive();
+  await hiveInit();
 
   print('initiating getIt');
   await getItInit();

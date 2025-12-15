@@ -77,6 +77,9 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget>
           builder: (context, child) => InputDecorator(
             isFocused: widget.image != null,
             decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          
               label: widget.label == null
                   ? null
                   : Padding(

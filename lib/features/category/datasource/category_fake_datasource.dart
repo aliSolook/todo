@@ -8,22 +8,16 @@ import 'package:todo/features/image/image.dart';
 import 'package:todo/utils/image_base_color_finder.dart';
 
 class CategoryFakeDatasource implements CategoryDatasource {
-  CategoryFakeDatasource._(this._random);
+  CategoryFakeDatasource(List<CategoryWrapper> data) : _data = data;
 
-  late final List<CategoryWrapper> _data;
-  final Random _random;
+  final List<CategoryWrapper> _data;
 
   static Future<CategoryFakeDatasource> init([int? count, int? seed]) async {
-    final output = CategoryFakeDatasource._(Random(seed));
-    await output._init(count);
-    return output;
+    return CategoryFakeDatasource(await _init(count, Random(seed)));
   }
 
-  Future<void> _init(int? count) async {
-    if (count == 0) {
-      _data = [];
-      return;
-    }
+  static Future<List<CategoryWrapper>> _init(int? count, Random random) async {
+    if (count == 0) return [];
 
     ImageRepository? imgRepo = locator.maybeGet();
     while (imgRepo == null) {
@@ -45,23 +39,23 @@ class CategoryFakeDatasource implements CategoryDatasource {
     }();
 
     int randomColor() =>
-        Colors.primaries[_random.nextInt(Colors.primaries.length)].toARGB32();
+        Colors.primaries[random.nextInt(Colors.primaries.length)].toARGB32();
 
     final texts =
         'لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان گرافیک است، چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است، و برای شرایط فعلی تکنولوژی مورد نیاز، و کاربردهای متنوع با هدف بهبود ابزارهای کاربردی می باشد، کتابهای زیادی در شصت و سه درصد گذشته حال و آینده، شناخت فراوان جامعه و متخصصان را می طلبد، تا با نرم افزارها شناخت بیشتری را برای طراحان رایانه ای علی الخصوص طراحان خلاقی، و فرهنگ پیشرو در زبان فارسی ایجاد کرد، در این صورت می توان امید داشت که تمام و دشواری موجود در ارائه راهکارها، و شرایط سخت تایپ به پایان رسد و زمان مورد نیاز شامل حروفچینی دستاوردهای اصلی، و جوابگوی سوالات پیوسته اهل دنیای موجود طراحی اساسا مورد استفاده قرار گیرد.'
             .split(' ');
 
-    _data = await Future.wait(
+    return await Future.wait(
       Iterable.generate(
-        count ?? _random.nextInt(7) + 3,
+        count ?? random.nextInt(7) + 3,
         (i) async {
           final image = images.isEmpty
               ? null
-              : images[_random.nextInt(images.length)].id;
+              : images[random.nextInt(images.length)].id;
 
           return CategoryWrapper(
             id: i,
-            title: texts[_random.nextInt(texts.length)],
+            title: texts[random.nextInt(texts.length)],
             image: image,
             color: image == null
                 ? randomColor()
@@ -122,7 +116,7 @@ class CategoryFakeDatasource implements CategoryDatasource {
   @override
   Future<void> updateCategory(CategoryWrapper categoryWrapper) async {
     final index = _data.indexWhere(
-      (category) => category.id == categoryWrapper,
+      (category) => category.id == categoryWrapper.id,
     );
     if (index == -1) {
       throw CategoryNotFoundException(categoryWrapper);

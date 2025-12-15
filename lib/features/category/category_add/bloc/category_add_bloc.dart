@@ -10,12 +10,9 @@ import 'package:todo/utils/image_base_color_finder.dart';
 part 'category_add_event.dart';
 part 'category_add_state.dart';
 
-final class CategoryAddScreenBloc
+class CategoryAddScreenBloc
     extends Bloc<CategoryAddScreenEvent, CategoryAddScreenState> {
-  static const durationError = 'زمان انتخاب شده باید از \'0\' ثانیه بیشتر باشد';
   static const titleError = 'این فیلد اجباری است';
-  static const categoryError = 'هیچ دسته بندی انتخاب نشده سات';
-  static const initDuration = Duration(minutes: 15);
 
   final CategoryRepository _categoryRepository = locator.get();
   final CustomColorRepository _customColorRepository = locator.get();
@@ -33,7 +30,7 @@ final class CategoryAddScreenBloc
       _customColorDeleteRequested,
     );
     on<CategoryAddScreenSubmitted>(_submitted);
-    on<CategoryAddScreenReset>(_reset);
+    on<CategoryAddScreenResetRequested>(_reset);
   }
 
   void _customColorsLoadRequested(
@@ -82,9 +79,16 @@ final class CategoryAddScreenBloc
   ) => emit(state.copyWith(color: event.value));
 
   void _reset(
-    CategoryAddScreenReset event,
+    CategoryAddScreenResetRequested event,
     Emitter emit,
-  ) => emit(CategoryAddScreenState.init(id: state.id));
+  ) => emit(
+    CategoryAddScreenState.init(
+      id: state.id,
+      customColorDeleteState: state.customColorDeleteState,
+      customColorsState: state.customColorsState,
+      submitState: state.submitState,
+    ),
+  );
 
   void _customColorAdded(
     CategoryAddScreenCustomColorAdded event,
@@ -173,7 +177,7 @@ final class CategoryAddScreenBloc
     if (state.color < 0 && state.image != null) {
       color = await ImageBaseColorFinder(locator.get()).getColor(state.image);
     } else {
-      color = -1;
+      color = state.color < 0 ? -1 : state.color;
     }
 
     final category = CategoryWrapper(

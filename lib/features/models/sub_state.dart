@@ -48,6 +48,14 @@ class SubState<T> extends Equatable {
   bool get isInProgress => status == StateStatus.inProgress;
   bool get isInit => status == null;
 
+  dynamic get _getValue =>
+      _value.isRight ? (_value as Right).value : _Placeholder();
+
   @override
-  List<Object?> get props => [status, _value, _error];
+  List<Object?> get props => [status, _getValue, _error];
+}
+
+class _Placeholder extends Equatable {
+  @override
+  List<Object?> get props => [];
 }

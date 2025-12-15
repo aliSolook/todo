@@ -75,7 +75,7 @@ class _ImageAddScreenState extends State<ImageAddScreen> {
                           Radius.circular(10),
                         ),
                         child: Padding(
-                          padding: EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.all(20.0),
                           child: CircularProgressIndicator(
                             backgroundColor: ColorScheme.of(
                               context,

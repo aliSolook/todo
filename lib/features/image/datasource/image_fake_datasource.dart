@@ -21,9 +21,9 @@ final class ImageFakeDatasource extends ImageDatasource {
 
   @override
   Future addImage(Image image) {
-    final maxId = _data.map((e) => e.id as int).reduce(max);
+    final maxId = _data.map((e) => e.id as int).fold(0, max);
     _data.add((img: image, id: maxId + 1));
-    return SynchronousFuture(maxId);
+    return SynchronousFuture(maxId + 1);
   }
 
   @override

@@ -2,15 +2,13 @@ import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:todo/features/category/category.dart';
-import 'package:todo/features/custom_color/utils/show_color_add.dart';
+import 'package:todo/features/custom_color/custom_color.dart';
 import 'package:todo/features/image/image.dart';
 import 'package:todo/constants/constants.dart';
 import 'package:todo/features/listable/listable.dart';
-import 'package:todo/features/listable/utils/extensions.dart';
 import 'package:todo/utils/functions.dart';
 
 class CategoryAddScreen extends StatefulWidget {
@@ -276,6 +274,7 @@ class _CategoryAddScreenState extends State<CategoryAddScreen> {
           buildWhen: (previous, current) =>
               previous.isReadyForSubmition != current.isReadyForSubmition,
           builder: (context, state) => FilledButton(
+            key: const Key('category_add_screen_submit'),
             onPressed: () {
               _bloc.add(const CategoryAddScreenSubmitted());
             },
@@ -318,17 +317,21 @@ class _CategoryAddScreenState extends State<CategoryAddScreen> {
       padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
       sliver: SliverToBoxAdapter(
         child: BlocBuilder<CategoryAddScreenBloc, CategoryAddScreenState>(
+          buildWhen: (previous, current) => previous.color != current.color,
           builder: (context, state) => _colorsLayoutBuilder(
             context: context,
             colors: colors,
-            itemBuilder: (color, i) => _colorsItemBuilder(
+            itemBuilder: (color, i) => ColorPaletteColor(
               color: color,
               isSelected: color.toARGB32() == state.color,
               delay: (i + 1) * 2,
+              onPressed: () {
+                _bloc.add(CategoryAddScreenColorChanged(color.toARGB32()));
+              },
             ),
             prefixes: [
-              _colorsItemBuilder(
-                color: ColorScheme.of(context).surfaceContainer,
+              ColorPaletteAction(
+                key: const Key('category_add_screen_reset_color'),
                 icon: const Icon(Icons.close),
                 overrideOverlayColor: false,
                 shadowColor: Colors.black,
@@ -347,6 +350,10 @@ class _CategoryAddScreenState extends State<CategoryAddScreen> {
       padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
       sliver: SliverToBoxAdapter(
         child: BlocBuilder<CategoryAddScreenBloc, CategoryAddScreenState>(
+          buildWhen: (previous, current) =>
+              previous.color != current.color ||
+              previous.customColorsState != current.customColorsState ||
+              previous.customColorDeleteState != current.customColorDeleteState,
           builder: (context, state) {
             Widget child;
             if (state.customColorsState.isFailure) {
@@ -367,28 +374,37 @@ class _CategoryAddScreenState extends State<CategoryAddScreen> {
               child = _colorsLayoutBuilder(
                 context: context,
                 colors: colors,
-                itemBuilder: (color, i) => _colorsItemBuilder(
-                  color: color,
-                  isSelected: color.toARGB32() == state.color,
-                  shadow: state.customColorsState.isSuccess ? 1 : 0,
-                  delay: (i + 1) * 2,
-                  deleteInProgress: state.customColorDeleteState.isInProgress(
-                    state.customColorsState.either.orNull()?[i].id,
-                  ),
-                  onDelete: !state.customColorsState.isSuccess
-                      ? null
-                      : () {
-                          if (!state.customColorsState.isSuccess) return;
-                          final id = state.customColorsState.value[i].id;
-                          _bloc.add(
-                            CategoryAddScreenCustomColorDeleteRequested(id),
-                          );
-                        },
-                ),
+                itemBuilder: (color, i) {
+                  final id = state.customColorsState.either.orNull()?.elementAt(i).id;
+                  return ColorPaletteCustomColor(
+                    id: id,
+                    color: color,
+                    isSelected: color.toARGB32() == state.color,
+                    shadowMultiplier: state.customColorsState.isSuccess ? 1 : 0,
+                    delay: (i + 1) * 2,
+                    onPressed: () {
+                      _bloc.add(
+                        CategoryAddScreenColorChanged(color.toARGB32()),
+                      );
+                    },
+                    deleteInProgress: state.customColorDeleteState.isInProgress(
+                      state.customColorsState.either.orNull()?[i].id,
+                    ),
+                    onDelete: !state.customColorsState.isSuccess
+                        ? null
+                        : () {
+                            if (!state.customColorsState.isSuccess) return;
+                            _bloc.add(
+                              CategoryAddScreenCustomColorDeleteRequested(id),
+                            );
+                          },
+                  );
+                },
                 prefixes: [
                   if (state.customColorsState.isSuccess)
-                    _colorsItemBuilder(
-                      color: ColorScheme.of(context).surfaceContainer,
+                    ColorPaletteAction(
+                      key: const Key('category_add_screen_add_custom_color'),
+                      backgroundColor: ColorScheme.of(context).surfaceContainer,
                       shadowColor: Colors.black,
                       icon: SvgPicture.asset(
                         'assets/icons/color_palette_icon.svg',
@@ -459,175 +475,4 @@ class _CategoryAddScreenState extends State<CategoryAddScreen> {
       ...suffixes,
     ],
   );
-
-  Widget _colorsItemBuilder({
-    required Color color,
-    bool isSelected = true,
-    Widget? child,
-    Widget? icon,
-    double shadow = 1,
-    Color? shadowColor,
-    bool overrideOverlayColor = true,
-    VoidCallback? onPressed,
-    double? delay,
-    VoidCallback? onDelete,
-    bool deleteInProgress = false,
-  }) {
-    assert(shadow >= 0);
-
-    // final forgroundColor = Color.fromARGB(
-    //   255,
-    //   (1 - color.r) * 255 ~/ 1,
-    //   (1 - color.g) * 255 ~/ 1,
-    //   (1 - color.b) * 255 ~/ 1,
-    // );
-    final forgroundColor = useWhiteForeground(color)
-        ? Colors.white
-        : Colors.black;
-
-    Widget effectiveChild = DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: (shadowColor ?? color).withAlpha(0.8 * 255 ~/ 1),
-            offset: const Offset(1, 2) * shadow,
-            blurRadius: 5 * shadow,
-          ),
-        ],
-      ),
-      child:
-          child ??
-          IconButton(
-            style: IconButton.styleFrom(
-              padding: EdgeInsets.zero,
-              overlayColor: overrideOverlayColor ? forgroundColor : null,
-            ),
-            onPressed:
-                onPressed ??
-                () => _bloc.add(
-                  CategoryAddScreenColorChanged(color.toARGB32()),
-                ),
-            icon:
-                icon ??
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 210),
-                  opacity: isSelected ? 1 : 0,
-                  child: Icon(
-                    Icons.done,
-                    color: forgroundColor,
-                  ),
-                ),
-          ),
-    );
-
-    const deleteIconOffset = Offset(-10, -10);
-    const deleteIconSize = Size(25, 25);
-
-    return TweenAnimationBuilder(
-      duration: Durations.short1 * (delay ?? 0) * 2,
-      tween: Tween<double>(begin: 0, end: 1),
-      curve: const Interval(.5, 1),
-      builder: (context, value, child) => Opacity(opacity: value, child: child),
-      child: onDelete == null
-          ? effectiveChild
-          : Stack(
-              clipBehavior: Clip.none,
-              alignment: AlignmentDirectional.topStart,
-              children: [
-                effectiveChild,
-                Builder(
-                  builder: (context) => Positioned(
-                    top: deleteIconOffset.dy,
-                    right: Directionality.of(context) == TextDirection.rtl
-                        ? deleteIconOffset.dx
-                        : null,
-                    left: Directionality.of(context) == TextDirection.ltr
-                        ? deleteIconOffset.dx
-                        : null,
-                    width: deleteIconSize.width,
-                    height: deleteIconSize.height,
-                    child: ClipPath(
-                      clipper: _ShadowOnlyClipper(
-                        const CircleBorder(),
-                        const EdgeInsets.all(100),
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: ColorScheme.of(context).shadow,
-                              offset: const Offset(1, 2),
-                              blurRadius: 5,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Builder(
-                  builder: (context) => Positioned(
-                    top: deleteIconOffset.dy,
-                    right: Directionality.of(context) == TextDirection.rtl
-                        ? deleteIconOffset.dx
-                        : null,
-                    left: Directionality.of(context) == TextDirection.ltr
-                        ? deleteIconOffset.dx
-                        : null,
-                    width: deleteIconSize.width,
-                    height: deleteIconSize.height,
-                    child: AnimatedSwitcher(
-                      duration: animationDuration,
-                      child: deleteInProgress
-                          ? const CircularProgressIndicator(
-                              key: ValueKey(true),
-                              strokeCap: StrokeCap.round,
-                            )
-                          : DeferPointer(
-                              key: const ValueKey(false),
-                              child: IconButton(
-                                style: IconButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                ),
-                                onPressed: onDelete,
-                                icon: const Icon(Icons.close),
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-}
-
-class _ShadowOnlyClipper extends CustomClipper<Path> {
-  final EdgeInsets padding;
-  final ShapeBorder shape;
-
-  _ShadowOnlyClipper(this.shape, this.padding);
-
-  @override
-  Path getClip(Size size) {
-    final path1 = shape.getOuterPath(Offset.zero & size);
-    final path2 = Path()
-      ..addRect(
-        Rect.fromLTRB(
-          -padding.left,
-          -padding.top,
-          size.width + padding.right,
-          size.height + padding.bottom,
-        ),
-      );
-
-    return Path.combine(PathOperation.reverseDifference, path1, path2);
-  }
-
-  @override
-  bool shouldReclip(_ShadowOnlyClipper oldClipper) =>
-      padding != oldClipper.padding || shape != oldClipper.shape;
 }

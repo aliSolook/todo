@@ -47,6 +47,21 @@ final class ListableDeleteState<T> extends Equatable {
     this.message,
   });
 
+  const ListableDeleteState.inProgress({
+    required this.item,
+    this.message,
+  }) : status = StateStatus.inProgress;
+
+  const ListableDeleteState.failure({
+    required this.item,
+    this.message,
+  }) : status = StateStatus.failure;
+
+  const ListableDeleteState.success({
+    required this.item,
+    this.message,
+  }) : status = StateStatus.success;
+
   ListableDeleteState copyWith({
     StateStatus? status,
     Either<Null, T> item = const Left(null),

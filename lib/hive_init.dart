@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo/features/task/task.dart';
@@ -5,15 +7,17 @@ import 'features/category/category.dart';
 import 'features/counter/counter.dart';
 import 'features/custom_color/custom_color.dart';
 import 'features/image/image.dart';
-import 'package:path_provider/path_provider.dart' as pp;
 import 'package:path/path.dart' as p;
 
-void initHive([bool mock = false]) async {
+Future<void> hiveInit([bool mock = false]) async {
   final subDir = p.join('todo', 'database');
   if (mock) {
-    final tmpDir = (await pp.getTemporaryDirectory()).path;
+    final tmpDir = Directory.systemTemp.path;
+    final hivePath = p.join(tmpDir, subDir);
+
+    await Directory(hivePath).create(recursive: true);
     
-    Hive.init(p.join(tmpDir, subDir));
+    Hive.init(hivePath);
   } else {
     await Hive.initFlutter(subDir);
   }

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:hive/hive.dart';
 import 'package:todo/features/category/category.dart';
 
 part 'category_hive_type.g.dart';
 
 @HiveType(typeId: 1)
+@immutable
 class CategoryHiveType {
   @HiveField(0)
   final String title;
