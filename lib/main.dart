@@ -44,14 +44,15 @@ import 'package:todo/hive_init.dart';
 
 import 'features/screen_manager/screen_manager.dart';
 
-void main() async {
-  // return runApp(const TestApp());
+void main() {
+  bootstrapApp();
+}
 
+Future<void> bootstrapApp([bool sandbox = false]) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await hiveInit();
+  await hiveInit(sandbox);
 
-  print('initiating getIt');
   await getItInit();
 
   runApp(const MyApp());
@@ -131,7 +132,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
-    
+
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     material = AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(

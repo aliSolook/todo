@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:todo/features/category/category.dart';
@@ -49,20 +48,20 @@ void main() {
       expect(find.text(category.title), findsOneWidget);
 
       // Checking color
-      var containerFinder = find.byType(Container);
+      var containerFinder = find.byType(DecoratedBox);
       var decoration =
           tester
-                  .widgetList<Container>(containerFinder)
-                  .cast<Container?>()
+                  .widgetList<DecoratedBox>(containerFinder)
+                  .cast<DecoratedBox?>()
                   .firstWhere(
                     (e) => e!.decoration is BoxDecoration,
                     orElse: () => null,
                   )
                   ?.decoration
-              as BoxDecoration;
+              as BoxDecoration?;
 
       expect(
-        decoration.boxShadow?.first.color.withAlpha(255),
+        decoration?.boxShadow?.first.color.withAlpha(255),
         Color(category.color).withAlpha(255),
       );
 
@@ -100,11 +99,11 @@ void main() {
         ),
       );
 
-      containerFinder = find.byType(Container);
+      containerFinder = find.byType(DecoratedBox);
       decoration =
           tester
-                  .widgetList<Container>(containerFinder)
-                  .cast<Container?>()
+                  .widgetList<DecoratedBox>(containerFinder)
+                  .cast<DecoratedBox?>()
                   .firstWhere(
                     (e) =>
                         e!.decoration is BoxDecoration &&
@@ -112,11 +111,11 @@ void main() {
                     orElse: () => null,
                   )
                   ?.decoration
-              as BoxDecoration;
+              as BoxDecoration?;
 
-      expect(decoration.image?.image, isA<img.CustomImageProvider>());
-      final provider = decoration.image?.image as img.CustomImageProvider;
-      expect(provider.imageId, categoryWithImage.image);
+      expect(decoration?.image?.image, isA<img.CustomImageProvider>());
+      final provider = decoration?.image?.image as img.CustomImageProvider?;
+      expect(provider?.imageId, categoryWithImage.image);
     },
   );
 

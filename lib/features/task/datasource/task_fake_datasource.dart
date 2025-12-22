@@ -8,23 +8,16 @@ import 'package:todo/features/image/image.dart';
 import 'package:todo/features/task/task.dart';
 
 class TaskFakeDatasource extends TaskDatasource {
-  TaskFakeDatasource._(this._random);
+  TaskFakeDatasource(this._data);
 
-  late final List<TaskWrapper> _data;
-  final Random _random;
+  final List<TaskWrapper> _data;
 
-  static Future<TaskFakeDatasource> init([int? count, int? seed]) async {
-    final output = TaskFakeDatasource._(Random(seed));
-    await output._init(count);
-    return output;
-  }
+  static Future<TaskFakeDatasource> init([int? count, int? seed]) async =>
+      TaskFakeDatasource(await _init(count, Random(seed)));
 
-  Future<void> _init(int? count) async {
-    if (count == 0) {
-      _data = [];
-      return;
-    }
-    var max = (Jalali.now() - 10).millisecondsSinceEpoch;
+  static Future<List<TaskWrapper>> _init(int? count, Random random) async {
+    if (count == 0) return [];
+    var max = Jalali.now().withoutTime.addDays(-2).millisecondsSinceEpoch;
     final categories = await () async {
       CategoryRepository? repo = locator.maybeGet();
       while (repo == null) {
@@ -70,32 +63,33 @@ class TaskFakeDatasource extends TaskDatasource {
     final minDelta = const Duration(hours: 1).inMilliseconds;
 
     TaskWrapper taskGenerator(int i) {
-      final duration = _random.nextInt(maxDelta - minDelta) + minDelta;
+      final duration = random.nextInt(maxDelta - minDelta) + minDelta;
       max += duration;
 
       return TaskWrapper(
         id: i,
         title: List.generate(
-          _random.nextInt(4) + 1,
-          (_) => texts[_random.nextInt(texts.length)],
+          random.nextInt(4) + 1,
+          (_) => texts[random.nextInt(texts.length)],
         ).join(' '),
         description: List.generate(
-          _random.nextInt(10) + 1,
-          (_) => texts[_random.nextInt(texts.length)],
+          random.nextInt(10) + 1,
+          (_) => texts[random.nextInt(texts.length)],
         ).join(' '),
         duration: Duration(milliseconds: duration),
         startingDate: Jalali.fromMillisecondsSinceEpoch(max),
-        category: categories[_random.nextInt(categories.length)].id,
-        image: images.isEmpty
-            ? null
-            : images[_random.nextInt(images.length)].id,
-        status: _random.nextInt(3) == 0,
+        category: categories[random.nextInt(categories.length)].id,
+        image: images.isEmpty ? null : images[random.nextInt(images.length)].id,
+        status: random.nextInt(3) == 0,
       );
     }
 
-    bool test(_) => _random.nextInt(3) > 0; // remove 1/3
+    bool test(_) => random.nextInt(3) > 0; // remove 1/3
 
-    _data = Iterable.generate(count ?? _random.nextInt(365), taskGenerator).where(test).toList();
+    return Iterable.generate(
+      count ?? random.nextInt(365),
+      taskGenerator,
+    ).where(test).toList();
   }
 
   @override
@@ -107,6 +101,22 @@ class TaskFakeDatasource extends TaskDatasource {
 
     _data.add(TaskWrapper.fromTask(++max, task));
     return SynchronousFuture(max);
+  }
+
+  @override
+  Future<Iterable<dynamic>> addAllTasks(Iterable<Task> tasks) {
+    int max = 0;
+    for (var task in _data) {
+      if (task.id as int > max) max = task.id;
+    }
+
+    final output = <int>[];
+    for (var task in tasks) {
+      _data.add(TaskWrapper.fromTask(++max, task));
+      output.add(max);
+    }
+
+    return SynchronousFuture(output);
   }
 
   @override

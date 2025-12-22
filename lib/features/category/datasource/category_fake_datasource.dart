@@ -52,14 +52,15 @@ class CategoryFakeDatasource implements CategoryDatasource {
           final image = images.isEmpty
               ? null
               : images[random.nextInt(images.length)].id;
+          final color = image == null
+              ? randomColor()
+              : await ImageBaseColorFinder(imgRepo!).getColor(image);
 
           return CategoryWrapper(
             id: i,
             title: texts[random.nextInt(texts.length)],
             image: image,
-            color: image == null
-                ? randomColor()
-                : await ImageBaseColorFinder(imgRepo!).getColor(image),
+            color: color,
           );
         },
       ),
@@ -69,12 +70,28 @@ class CategoryFakeDatasource implements CategoryDatasource {
   @override
   Future addCategory(Category category) async {
     int max = 0;
-    for (var task in _data) {
-      if (task.id as int > max) max = task.id;
+    for (var category in _data) {
+      if (category.id as int > max) max = category.id;
     }
 
     _data.add(CategoryWrapper.fromCategory(++max, category));
     return SynchronousFuture(max);
+  }
+
+  @override
+  Future<Iterable> addAllCategories(Iterable<Category> categories) {
+    int max = 0;
+    for (var category in _data) {
+      if (category.id as int > max) max = category.id;
+    }
+
+    final output = <int>[];
+    for (var category in categories) {
+      _data.add(CategoryWrapper.fromCategory(++max, category));
+      output.add(max);
+    }
+
+    return SynchronousFuture(output);
   }
 
   @override

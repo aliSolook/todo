@@ -37,6 +37,22 @@ class CustomColorFakeDatasource implements CustomColorDatasource {
   }
 
   @override
+  Future<Iterable> addAllCustomColors(Iterable<int> colors) {
+    int max = 0;
+    for (var color in _data) {
+      if (color.id as int > max) max = color.id;
+    }
+
+    final output = <int>[];
+    for (var color in colors) {
+      _data.add(CustomColorWrapper(++max, color));
+      output.add(max);
+    }
+
+    return SynchronousFuture(output);
+  }
+
+  @override
   Future<void> deleteCustomColor(dynamic id) async {
     bool idExists = false;
 

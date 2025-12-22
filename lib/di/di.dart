@@ -27,7 +27,9 @@ Future<void> initImage({
   int? seed,
 }) async {
   if (mock) {
-    _rs<ImageDatasource>(await ImageFakeDatasource.init(seed));
+    _rs<ImageDatasource>(
+      await ImageFakeDatasource.init(count: count, seed: seed),
+    );
   } else if (kIsWeb) {
     _rs<ImageDatasource>(ImageHiveDatasource());
   } else {
@@ -74,7 +76,9 @@ Future<void> initCounter({
   int? seed,
 }) async {
   if (mock) {
-    _rs<CounterDatasource>(CounterFakeDatasource());
+    _rs<CounterDatasource>(
+      await CounterFakeDatasource.init(count: count, seed: seed),
+    );
   } else {
     _rs<CounterDatasource>(CounterLocalDatasource());
   }

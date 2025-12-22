@@ -26,9 +26,22 @@ class ThemeSwitcherBase extends StatefulWidget {
 }
 
 class _ThemeSwitcherBaseState extends State<ThemeSwitcherBase>
-    with ChangeNotifier {
+    implements Listenable {
   late ThemeMode _themeMode = widget.initThemeMode;
-  final rotueObserver = RouteObserver<PageRoute>();
+  final routeObserver = RouteObserver<PageRoute>();
+  final List<VoidCallback> _listeners = [];
+
+  void notifyListeners() {
+    for (var listener in _listeners) {
+      listener();
+    }
+  }
+
+  @override
+  void addListener(VoidCallback listener) => _listeners.add(listener);
+
+  @override
+  void removeListener(VoidCallback listener) => _listeners.remove(listener);
 
   set themeMode(ThemeMode themeMode) {
     _themeMode = themeMode;
@@ -46,7 +59,7 @@ class _ThemeSwitcherBaseState extends State<ThemeSwitcherBase>
         : _getSystemTheme(context);
     return _ThemeSwitcherBaseInherited(
       this,
-      child: widget.builder(context, effectiveMode, rotueObserver),
+      child: widget.builder(context, effectiveMode, routeObserver),
     );
   }
 }

@@ -10,6 +10,7 @@ import 'package:todo/features/category/category.dart';
 import 'package:todo/features/custom_color/custom_color.dart';
 import 'package:todo/features/image/image.dart';
 
+import '../../../test/test_utils/robots/category/category_add_robot.dart';
 import '../../../test/test_utils/test_utils.dart';
 
 void main() {

@@ -5,6 +5,7 @@ abstract class CategoryDatasource {
   Future<List<CategoryWrapper>> listCategories();
   Future<CategoryWrapper> getCategory(dynamic id);
   Future<dynamic> addCategory(Category category);
+  Future<Iterable<dynamic>> addAllCategories(Iterable<Category> categories);
   Future<void> deleteCategory(dynamic id);
   Future<void> updateCategory(CategoryWrapper categoryWrapper);
 }

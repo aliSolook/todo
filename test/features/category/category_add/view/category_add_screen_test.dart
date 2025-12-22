@@ -9,6 +9,7 @@ import 'package:todo/features/custom_color/custom_color.dart';
 import 'package:todo/features/image/image.dart';
 import 'package:todo/features/listable/listable.dart';
 
+import '../../../../test_utils/robots/category/category_add_robot.dart';
 import '../../../../test_utils/test_utils.dart';
 
 class MockCategoryAddScreenBloc
@@ -528,7 +529,6 @@ void main() {
       'then that custom color is expected to be deleted',
       (tester) async {
         const statesTimeout = Duration(seconds: 2);
-        tester.printToConsole('test started');
         final robot = CategoryAddRobot(tester);
         final bloc = MockCategoryAddScreenBloc();
 
@@ -561,7 +561,6 @@ void main() {
           ]),
         );
 
-        tester.printToConsole('pumping widget');
         await tester.pumpWidget(
           MaterialApp(
             home: RepositoryProvider<ImageRepository>.value(

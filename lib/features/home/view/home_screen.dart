@@ -66,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _gap(32),
                 _getSectionsTitle(
                   title: 'تسک های امروز',
+                  key: const Key('home_screen_show_more_tasks_button'),
                   onTap: () {
                     BlocProvider.of<ScreenManagerCubit>(
                       context,
@@ -470,6 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Stack(
           children: [
             TextField(
+              key: const Key('home_screen_search_field'),
               focusNode: _searchBarFocusNode,
               controller: _searchController,
               onTapOutside: (event) {
@@ -630,6 +632,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getSectionsTitle({
     required String title,
     void Function()? onTap,
+    Key? key,
     bool isSliver = true,
   }) {
     final child = Padding(
@@ -647,6 +650,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const Spacer(),
           TextButton(
+            key: key,
             onPressed: onTap,
             child: Text(
               'مشاهده بیشتر',

@@ -12,6 +12,10 @@ class TaskLocalDatasource implements TaskDatasource {
   }
 
   @override
+  Future<Iterable<dynamic>> addAllTasks(Iterable<Task> tasks) =>
+      _box.addAll(tasks.map(TaskHiveType.fromTask));
+
+  @override
   Future<void> deleteTask(dynamic id) {
     if (!_box.containsKey(id)) {
       throw TaskNotFoundException(id);

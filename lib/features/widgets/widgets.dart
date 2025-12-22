@@ -12,7 +12,6 @@ export 'pointer_linker_widget.dart';
 export 'responsive_layout.dart';
 export 'single_state_widget.dart';
 export 'squircle_border.dart';
-export 'task_widget.dart';
 export 'time_line.dart';
 export 'time_picker.dart';
 export 'automatic_animated_sliver_list_view.dart';

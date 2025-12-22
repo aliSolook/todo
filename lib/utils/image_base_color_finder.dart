@@ -21,26 +21,35 @@ class ImageBaseColorFinder {
       final image = img.decodeImage(data);
       if (image == null) return fallbackColor!;
 
-      final colorsCount = <img.Color, int>{};
+      final colorsCount = <({num a, num r, num g, num b}), int>{};
       final iterator = image.iterator;
 
       while (iterator.moveNext()) {
-        colorsCount[iterator.current] =
-            (colorsCount[iterator.current] ?? 0) + 1;
+        // rounding colors
+        final current = (
+          a: iterator.current.a ~/ 10,
+          r: iterator.current.r ~/ 10,
+          g: iterator.current.g ~/ 10,
+          b: iterator.current.b ~/ 10,
+        );
+
+        colorsCount[current] = (colorsCount[current] ?? 0) + 1;
       }
 
       final entries = colorsCount.entries;
-      MapEntry<img.Color, int>? max;
+      MapEntry<({num a, num r, num g, num b}), int>? max;
       for (var element in entries) {
+        if (element.key.a < 10) continue;
         if (element.value > (max?.value ?? -1)) max = element;
       }
 
       if (max == null) return fallbackColor!;
-      final result = Color.from(
-        alpha: max.key.aNormalized.toDouble(),
-        red: max.key.rNormalized.toDouble(),
-        green: max.key.gNormalized.toDouble(),
-        blue: max.key.bNormalized.toDouble(),
+
+      final result = Color.fromARGB(
+        (max.key.a * 10).clamp(0, 255).toInt(),
+        (max.key.r * 10).clamp(0, 255).toInt(),
+        (max.key.g * 10).clamp(0, 255).toInt(),
+        (max.key.b * 10).clamp(0, 255).toInt(),
       ).toARGB32();
       return _cache[imgId] = result;
     }

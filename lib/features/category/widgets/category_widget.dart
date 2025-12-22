@@ -59,45 +59,46 @@ class CategoryWidget extends StatelessWidget {
             builder: (_, value, child) {
               return DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(
-                    255 * value ~/ 1,
+                  color: ColorScheme.of(context).surface,
+                  borderRadius: const BorderRadiusGeometry.all(
+                    Radius.circular(20),
                   ),
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  image: category!.image == null
+                      ? null
+                      : DecorationImage(
+                          image: CustomImageProvider(
+                            imageId: category!.image,
+                            repository: RepositoryProvider.of(context),
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                  boxShadow: categoryShadowBuilder(
+                    category!.color < 0
+                        ? ColorScheme.of(context).shadow
+                        : Color(category!.color),
+                    strength: isSelected == null || isSelected! ? 1 : 0,
+                    opacityMultiplier: opacityMultiplier,
+                  ),
                 ),
-                position: DecorationPosition.foreground,
-                child: child,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(
+                      255 * value ~/ 1,
+                    ),
+                    borderRadius: const BorderRadiusGeometry.all(
+                      Radius.circular(20),
+                    ),
+                  ),
+                  position: DecorationPosition.foreground,
+                  child: child,
+                ),
               );
             },
             duration: animationDuration,
             tween: Tween<double>(end: isSelected == false ? maxDim : minDim),
-            child: AnimatedContainer(
-              duration: animationDuration,
+            child: SizedBox(
               width: width,
               height: height,
-              decoration: BoxDecoration(
-                color: category!.image == null
-                    ? ColorScheme.of(context).surface
-                    : null,
-                borderRadius: const BorderRadiusGeometry.all(
-                  Radius.circular(20),
-                ),
-                image: category!.image == null
-                    ? null
-                    : DecorationImage(
-                        image: CustomImageProvider(
-                          imageId: category!.image,
-                          repository: RepositoryProvider.of(context),
-                        ),
-                        fit: BoxFit.cover,
-                      ),
-                boxShadow: categoryShadowBuilder(
-                  category!.color < 0
-                      ? ColorScheme.of(context).shadow
-                      : Color(category!.color),
-                  strength: isSelected == null || isSelected! ? 1 : 0,
-                  opacityMultiplier: opacityMultiplier,
-                ),
-              ),
               child: FilledButton(
                 onPressed: onTap,
                 style: FilledButton.styleFrom(
@@ -121,7 +122,7 @@ class CategoryWidget extends StatelessWidget {
                               ),
                               width: double.infinity,
                             ),
-                            if(child != null) child,
+                            if (child != null) child,
                           ],
                         ),
                   disabledBackgroundColor: Colors.transparent,
@@ -147,7 +148,10 @@ class CategoryWidget extends StatelessWidget {
                           ),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 7,
+                            horizontal: 2,
+                          ),
                           child: Text(
                             category!.title,
                             textAlign: TextAlign.center,

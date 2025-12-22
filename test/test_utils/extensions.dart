@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import './test_utils.dart';
 
 extension WidgetTesterExtension on WidgetTester {
   Future<void> scrollTo(FinderBase<Element> finder) async {
@@ -32,4 +33,8 @@ extension WidgetTesterExtension on WidgetTester {
   }
 
   int count(FinderBase finder) => finder.evaluate().length;
+}
+
+extension CommonFindersExtensions on CommonFinders{
+  FinderBase<Element> where(bool Function(Element element) test) => WhereFinder(test);
 }

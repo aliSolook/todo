@@ -10,6 +10,11 @@ class CategoryLocalDatasource implements CategoryDatasource {
   }
 
   @override
+  Future<Iterable> addAllCategories(Iterable<Category> categories) {
+    return _box.addAll(categories.map(CategoryHiveType.fromCategory));
+  }
+
+  @override
   Future<void> deleteCategory(dynamic id) {
     if (!_box.containsKey(id)) {
       throw CategoryNotFoundException(id);

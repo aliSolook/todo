@@ -5,6 +5,7 @@ abstract class CounterDatasource {
   Future<List<CounterWrapper>> listCounters();
   Future<CounterWrapper> getCounter(dynamic id);
   Future<dynamic> addCounter(Counter counter);
+  Future<Iterable<dynamic>> addAllCounters(Iterable<Counter> counters);
   Future<void> deleteCounter(dynamic id);
   Future<void> updateCounter(CounterWrapper counterWrapper);
 }

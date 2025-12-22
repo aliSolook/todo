@@ -9,9 +9,9 @@ import 'features/custom_color/custom_color.dart';
 import 'features/image/image.dart';
 import 'package:path/path.dart' as p;
 
-Future<void> hiveInit([bool mock = false]) async {
+Future<void> hiveInit([bool sandbox = false]) async {
   final subDir = p.join('todo', 'database');
-  if (mock) {
+  if (sandbox) {
     final tmpDir = Directory.systemTemp.path;
     final hivePath = p.join(tmpDir, subDir);
 

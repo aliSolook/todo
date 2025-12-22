@@ -6,9 +6,12 @@ class CounterLocalDatasource implements CounterDatasource {
 
   @override
   Future<dynamic> addCounter(Counter counter) {
-    print('adding');
     return _box.add(CounterHiveType.fromCounter(counter));
   }
+
+  @override
+  Future<Iterable<dynamic>> addAllCounters(Iterable<Counter> counters) =>
+      _box.addAll(counters.map(CounterHiveType.fromCounter));
 
   @override
   Future<void> deleteCounter(dynamic id) {

@@ -10,6 +10,10 @@ class CustomColorLocalDatasource implements CustomColorDatasource {
       _box.add(CustomColorHiveType(color));
 
   @override
+  Future<Iterable> addAllCustomColors(Iterable<int> colors) =>
+      _box.addAll(colors.map(CustomColorHiveType.new));
+
+  @override
   Future<void> deleteCustomColor(dynamic id) {
     if (!_box.containsKey(id)) {
       throw CustomColorNotFoundException(id);

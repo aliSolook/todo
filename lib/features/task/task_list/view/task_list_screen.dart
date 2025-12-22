@@ -353,6 +353,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
             SizedBox.square(
               dimension: 56,
               child: InkWell(
+                key: const Key(
+                  'task_list_screen_show_date_range_picker_button',
+                ),
                 customBorder: const SquircleBorder(),
                 onTap: () async {
                   final result = await showPersianDateRangePicker(
@@ -453,137 +456,21 @@ class _TaskListScreenState extends State<TaskListScreen> {
             if (state.daysState.isInProgress || state.daysState.isInit) {
               children = List.generate(
                 7,
-                (_) => Shimmer.fromColors(
-                  baseColor: ColorScheme.of(context).onSurfaceVariant,
-                  highlightColor: ColorScheme.of(context).surfaceContainer,
-                  child: Container(
-                    width: 71,
-                    height: 87,
-                    padding: EdgeInsets.zero,
-                    decoration: BoxDecoration(
-                      color: ColorScheme.of(context).surface,
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
+                (_) => const DayOfWeekWidget(),
               ).toList();
             } else {
-              children = state.daysState.value.entries.map(
-                (e) {
-                  final bool selected = state.dateRange.any(
-                    (d) => d.inRange(e.key),
-                  );
-                  return TweenAnimationBuilder(
-                    duration: animationDuration,
-                    tween: Tween<double>(end: selected ? 1 : 0),
-                    builder: (context, value, child) => Container(
-                      width: 71,
-                      height: 87,
-                      decoration: BoxDecoration.lerp(
-                        BoxDecoration(
-                          color: ColorScheme.of(context).primaryContainer,
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(16),
-                          ),
-                        ),
-                        BoxDecoration(
-                          color: ColorScheme.of(context).primary,
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(16),
-                          ),
-                          boxShadow: kElevationToShadow[12]
-                              ?.map(
-                                (e) => e.copyWith(
-                                  color: ColorScheme.of(context).primary
-                                      .withAlpha(
-                                        e.color.a * 255 ~/ 1,
-                                      ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                        value,
+              children = state.daysState.value.entries
+                  .map(
+                    (e) => DayOfWeekWidget(
+                      date: e.key,
+                      selected: state.dateRange.any(
+                        (d) => d.inRange(e.key),
                       ),
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(16),
-                            ),
-                          ),
-                          backgroundColor: Colors.transparent,
-                          padding: EdgeInsets.zero,
-                          elevation: 0,
-                          overlayColor: Color.lerp(
-                            ColorScheme.of(context).onPrimary,
-                            ColorScheme.of(context).primary,
-                            value,
-                          ),
-                        ),
-                        onPressed: () => _bloc.add(TaskListDateToggled(e.key)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                e.key.formatter.wN,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: -.24,
-                                  fontSize: 14,
-                                  color: Color.lerp(
-                                    ColorScheme.of(context).primary,
-                                    ColorScheme.of(context).onPrimary,
-                                    value,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                convertDigits(e.key.day),
-                                style: TextStyle(
-                                  letterSpacing: -.24,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: Color.lerp(
-                                    ColorScheme.of(context).primary,
-                                    ColorScheme.of(context).onPrimary,
-                                    value,
-                                  ),
-                                ),
-                              ),
-                              SizedBox.square(
-                                dimension: 5,
-                                child: TweenAnimationBuilder(
-                                  duration: animationDuration,
-                                  tween: Tween<double>(end: e.value ? 0 : 1),
-                                  builder: (context, value2, child) =>
-                                      DecoratedBox(
-                                        decoration: ShapeDecoration(
-                                          color: Color.lerp(
-                                            Color.lerp(
-                                              ColorScheme.of(context).primary,
-                                              ColorScheme.of(context).onPrimary,
-                                              value,
-                                            ),
-                                            Colors.transparent,
-                                            value2,
-                                          ),
-                                          shape: const CircleBorder(),
-                                        ),
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      containsUnfinishedTask: e.value,
+                      onPressed: () => _bloc.add(TaskListDateToggled(e.key)),
                     ),
-                  );
-                },
-              ).toList();
+                  )
+                  .toList();
             }
 
             return SingleChildScrollView(
@@ -594,7 +481,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   horizontal: horizontalPadding,
                 ),
                 child: Row(
-                  key: const ValueKey(null),
+                  key: const Key('task_list_screen_days_of_week_parent'),
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
                   spacing: 20,
@@ -831,5 +718,151 @@ class _TaskListScreenState extends State<TaskListScreen> {
         ),
       ),
     );
+  }
+}
+
+class DayOfWeekWidget extends StatelessWidget {
+  const DayOfWeekWidget({
+    super.key,
+    this.date,
+    this.selected,
+    this.onPressed,
+    this.containsUnfinishedTask,
+  }) : assert(date == null || selected != null),
+       assert(date == null || onPressed != null),
+       assert(date == null || containsUnfinishedTask != null);
+
+  final Jalali? date;
+  final bool? selected;
+  final VoidCallback? onPressed;
+  final bool? containsUnfinishedTask;
+
+  @override
+  Widget build(BuildContext context) {
+    if (date == null) {
+      return Shimmer.fromColors(
+        baseColor: ColorScheme.of(context).onSurfaceVariant,
+        highlightColor: ColorScheme.of(context).surfaceContainer,
+        child: Container(
+          width: 71,
+          height: 87,
+          padding: EdgeInsets.zero,
+          decoration: BoxDecoration(
+            color: ColorScheme.of(context).surface,
+            borderRadius: const BorderRadius.all(
+              Radius.circular(16),
+            ),
+          ),
+        ),
+      );
+    } else {
+      return TweenAnimationBuilder(
+        duration: animationDuration,
+        tween: Tween<double>(end: selected! ? 1 : 0),
+        builder: (context, value, child) => Container(
+          width: 71,
+          height: 87,
+          decoration: BoxDecoration.lerp(
+            BoxDecoration(
+              color: ColorScheme.of(context).primaryContainer,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(16),
+              ),
+            ),
+            BoxDecoration(
+              color: ColorScheme.of(context).primary,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(16),
+              ),
+              boxShadow: kElevationToShadow[12]
+                  ?.map(
+                    (e) => e.copyWith(
+                      color: ColorScheme.of(context).primary.withAlpha(
+                        e.color.a * 255 ~/ 1,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+            value,
+          ),
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(16),
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              padding: EdgeInsets.zero,
+              elevation: 0,
+              overlayColor: Color.lerp(
+                ColorScheme.of(context).onPrimary,
+                ColorScheme.of(context).primary,
+                value,
+              ),
+            ),
+            onPressed: onPressed,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(
+                    date!.formatter.wN,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -.24,
+                      fontSize: 14,
+                      color: Color.lerp(
+                        ColorScheme.of(context).primary,
+                        ColorScheme.of(context).onPrimary,
+                        value,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    convertDigits(date!.day),
+                    style: TextStyle(
+                      letterSpacing: -.24,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Color.lerp(
+                        ColorScheme.of(context).primary,
+                        ColorScheme.of(context).onPrimary,
+                        value,
+                      ),
+                    ),
+                  ),
+                  SizedBox.square(
+                    dimension: 5,
+                    child: TweenAnimationBuilder(
+                      duration: animationDuration,
+                      tween: Tween<double>(
+                        end: containsUnfinishedTask! ? 0 : 1,
+                      ),
+                      builder: (context, value2, child) => DecoratedBox(
+                        decoration: ShapeDecoration(
+                          color: Color.lerp(
+                            Color.lerp(
+                              ColorScheme.of(context).primary,
+                              ColorScheme.of(context).onPrimary,
+                              value,
+                            ),
+                            Colors.transparent,
+                            value2,
+                          ),
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 }

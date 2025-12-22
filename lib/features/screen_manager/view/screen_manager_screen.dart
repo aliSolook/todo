@@ -110,7 +110,11 @@ class ScreenManager extends StatelessWidget {
     return AppBar(
       surfaceTintColor: Colors.transparent,
       title: const Text('تو‌ دو'),
-      actions: [const ThemeSwitcherButton()],
+      actions: [
+        const ThemeSwitcherButton(
+          key: Key('screen_manager_theme_switcher_button'),
+        ),
+      ],
     );
   }
 
@@ -189,7 +193,7 @@ class ScreenManager extends StatelessWidget {
             ),
             indicatorColor: ColorScheme.of(context).primary,
             tabs: [
-              tabBarAnimator(
+              tabBarBuilder(
                 context,
                 child: SvgPicture.asset(
                   'assets/icons/home_icon.svg',
@@ -203,7 +207,7 @@ class ScreenManager extends StatelessWidget {
                 ),
                 index: 0,
               ),
-              tabBarAnimator(
+              tabBarBuilder(
                 context,
                 child: SvgPicture.asset(
                   'assets/icons/calendar_icon.svg',
@@ -217,7 +221,7 @@ class ScreenManager extends StatelessWidget {
                 ),
                 index: 1,
               ),
-              tabBarAnimator(
+              tabBarBuilder(
                 context,
                 child: SvgPicture.asset(
                   'assets/icons/clock_icon.svg',
@@ -253,7 +257,7 @@ class ScreenManager extends StatelessWidget {
     );
   }
 
-  Widget tabBarAnimator(
+  Widget tabBarBuilder(
     BuildContext context, {
     required Widget child,
     required Widget selectedChild,
@@ -265,6 +269,7 @@ class ScreenManager extends StatelessWidget {
           (current.selectedIndex == index || previous.selectedIndex == index),
       builder: (context, state) {
         return Tab(
+          key: Key('screen_manager_tab_$index'),
           child: AnimatedSwitcher(
             duration: animationDuration,
             child: SizedBox(

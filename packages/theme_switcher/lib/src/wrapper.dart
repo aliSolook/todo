@@ -313,6 +313,8 @@ class _ThemeSwitcherState extends State<ThemeSwitcher> {
             ? Visibility(
                 visible: false,
                 maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
                 child: buildMainChild(),
               )
             : SizedBox.fromSize(size: widget.placeHolderSize),

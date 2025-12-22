@@ -1,20 +1,63 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:todo/features/image/image.dart';
 import 'dart:math';
 
 final class ImageFakeDatasource extends ImageDatasource {
-  ImageFakeDatasource._();
+  ImageFakeDatasource(this._data);
 
-  late final List<({Image img, dynamic id})> _data;
+  final List<({Image img, dynamic id})> _data;
 
-  static Future<ImageFakeDatasource> init([int? seed]) async {
-    final output = ImageFakeDatasource._();
-    await output._init();
-    return output;
-  }
+  static Future<ImageFakeDatasource> init({int? count, int? seed}) async =>
+      ImageFakeDatasource(await _init(count, Random(seed)));
 
-  Future<void> _init() async {
-    _data = [];
+  static Future<List<({Image img, dynamic id})>> _init(
+    int? count,
+    Random random,
+  ) async {
+    if (count == 0) return [];
+    final assets = [
+      'assets/images/coding_image.png',
+      'assets/images/exercise.png',
+      'assets/images/shopping.png',
+      'assets/images/study.png',
+      'assets/images/studying_image.png',
+      'assets/images/teaching_image.png',
+    ];
+
+    Future<Image> readImage(String assetName) async {
+      final data = await rootBundle.load(assetName);
+      final title = assetName
+          .split('\\')
+          .last
+          .split('/')
+          .last
+          .split('.')
+          .first
+          .replaceAll('_', ' ');
+      return Image(title: title, data: data.buffer.asUint8List());
+    }
+
+    if (count == null) {
+      return Future.wait(
+        assets
+            .map(readImage)
+            .toList()
+            .asMap()
+            .entries
+            .map((value) async => (img: await value.value, id: value.key)),
+      );
+    }
+
+    Future<({Image img, dynamic id})> converter(dynamic id) async {
+      final assetName = assets[random.nextInt(assets.length)];
+      final img = await readImage(assetName);
+      return (img: img, id: id);
+    }
+
+    return Future.wait(
+      List.generate(count ?? random.nextInt(7) + 3, (i) => i).map(converter),
+    );
   }
 
   bool _containsId(dynamic id) => _data.any((e) => e.id == id);

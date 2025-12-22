@@ -235,7 +235,7 @@ class _ImageAddScreenState extends State<ImageAddScreen> {
             label: 'عکس',
             image: state.image,
             onImageChanged: (image) {
-              _bloc.add(ImageAddScreenImageChanged(image ?? Uint8List(0)));
+              _bloc.add(ImageAddScreenImageChanged(image));
             },
           ),
         ),

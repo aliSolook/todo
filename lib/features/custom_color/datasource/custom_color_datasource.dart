@@ -3,6 +3,7 @@ import 'package:todo/features/custom_color/custom_color.dart';
 abstract class CustomColorDatasource {
   Future<List<CustomColorWrapper>> listCustomColors();
   Future<dynamic> addCustomColor(int color);
+  Future<Iterable<dynamic>> addAllCustomColors(Iterable<int> colors);
   Future<void> deleteCustomColor(dynamic id);
 }
 
